@@ -1,0 +1,7 @@
+Application icon design
+Generated with the built-in imagegen tool on 2026-10-07 for this application's requested black-and-white rounded icon.
+Reference: Honkai: Star Rail, Remembrance path emblem.
+Reference asset: https://github.com/Mar-7th/StarRailRes/blob/master/icon/path/Remembrance.png
+The underlying game symbol belongs to its respective rights holders (HoYoverse); this is an unofficial application and no endorsement is implied.
+Prompt: preserve the circular layered arch/candle/flame silhouette; crisp white vector-like shapes centered on a near-black rounded square; subtle charcoal inner edge, matte finish, no text, no perspective, transparent outside the tile.
+app.ico contains resized 16/24/32/48/64/128/256 px representations of app.png, with no added image edits.

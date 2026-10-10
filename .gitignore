@@ -1,0 +1,32 @@
+# Public repository: whitelist. Everything at the top level is ignored unless
+# listed here. Private notes, user data, builds, releases and tools stay local.
+/*
+!/.gitignore
+!/README.md
+!/CHANGELOG.md
+!/main.py
+!/requirements.txt
+!/qqarchive/
+!/tests/
+!/docs/
+!/scripts/
+!/installer/
+
+# Never published
+__pycache__/
+*.py[cod]
+/docs-private/
+/.local/
+
+# Only generic tooling is listed; scripts/github_publish.py adds the current
+# version's build, release and installer scripts explicitly.
+/scripts/*
+!/scripts/github_publish.py
+!/scripts/frozen_acceptance.py
+!/scripts/installer_qa.py
+!/scripts/bench_search.py
+!/scripts/bench_hints.py
+!/scripts/bench_short_terms.py
+!/scripts/verify_key_and_phone.py
+/installer/*
+!/installer/ChineseSimplified.isl
