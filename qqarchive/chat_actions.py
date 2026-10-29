@@ -48,6 +48,10 @@ class ChatActions:
         if rows:self.set_messages(rows,bottom=direction>0)
         else:self.statusBar().showMessage('当前方向没有更多已归档消息',4000)
     def message_detail(self,index):
+        from .forwards import descriptor
+        if descriptor(index.data(Qt.UserRole)) is not None:
+            from .forward_window import open_forward
+            return open_forward(self,index.data(Qt.UserRole))
         m=index.data(Qt.UserRole);d=QDialog(self);d.setWindowTitle('消息详情');d.resize(720,600);l=QVBoxLayout(d)
         text=QTextEdit();text.setReadOnly(True);lines=[m['text'],'',stamp(m['time']),'QQ：'+m['sender_uin'],'','来源：']
         lines += [f"批次 {s['batch_id']} · {s['source_kind']} · {s['source_label']}" for s in self.arc.message_sources(m['id'])]

@@ -28,7 +28,7 @@ def main(stage):
         print(f"{name:20s} exit={proc.returncode} passed={report.get('passed')}",flush=True)
     for scale,label in (('1','100'),('1.5','150'),('2','200')):
         env=dict(base,QT_SCALE_FACTOR=scale)
-        for kind in ('dialog','interaction','transfer','sender'):
+        for kind in ('dialog','interaction','transfer','sender','forward','history'):
             launch(f'{kind}s-{label}',[f'--{kind}-preview'],env)
     launch('packaged-preview',['--preview'],dict(base),result='ui-result.json',timeout=120)
     for mode in ('live','stalled'):

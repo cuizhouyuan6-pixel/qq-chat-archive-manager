@@ -146,7 +146,8 @@ class Importer:
 
     def run(self, req: ImportRequest, messages: Iterable[NormalizedMessage], *,
             progress: Callable[[ImportStats], None] | None = None,
-            cancel: threading.Event | None = None, progress_every: int = 2000) -> ImportStats:
+            cancel: threading.Event | None = None, progress_every: int = 2000,
+            commit_hook=None) -> ImportStats:
         self._conv_cache.clear()
         self._conv_names.clear()
         self._pending=[];self._pending_bytes=0
@@ -209,6 +210,9 @@ class Importer:
                 (now(), stats.read, stats.inserted, stats.duplicates, stats.conflicts, stats.suspects,
                  stats.skipped, batch),
             )
+            if commit_hook is not None:
+                commit_hook(self.con, stats)
+            if cancel is not None and cancel.is_set():raise ImportCancelled('用户取消导入')
             self.con.execute("COMMIT")
         except BaseException as exc:
             if self.con.in_transaction:

@@ -16,6 +16,8 @@ class Workflows:
         from .desktop import label,row,button,Dates
         self.verified_sources={};self.flow_running=False
         layout=self.page('导入聊天记录','按顺序完成来源、密钥和导入范围；已完成步骤可随时展开修改。')
+        from .history_window import open_history
+        layout.addWidget(button('补全 QQ 中可查看、但本地缺失的历史',lambda:open_history(self)))
         self.flow_mode=QComboBox();self.flow_mode.addItem('引导模式 · 每步查看后继续','guided');self.flow_mode.addItem('全自动模式 · 确认范围后连续执行','auto')
         self.flow_mode.setCurrentIndex(1 if self.cfg.import_mode=='auto' else 0);self.flow_mode.currentIndexChanged.connect(self.mode_changed)
         self.flow_hint=label('引导模式会逐步展开所需选项。','muted')

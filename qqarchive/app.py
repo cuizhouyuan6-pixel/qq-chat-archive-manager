@@ -37,7 +37,7 @@ def self_test(root):
     finally:a.close();b.close()
 
 def main(argv=None):
-    ap=argparse.ArgumentParser();ap.add_argument('--self-test');ap.add_argument('--phone-smoke');ap.add_argument('--key-smoke');ap.add_argument('--preview');ap.add_argument('--dialog-preview');ap.add_argument('--interaction-preview');ap.add_argument('--sender-preview');ap.add_argument('--transfer-preview');ap.add_argument('--transfer-performance');ap.add_argument('--transfer-performance-mode',choices=('live','stalled'),default='live');ap.add_argument('--smoke',action='store_true');args=ap.parse_args(argv)
+    ap=argparse.ArgumentParser();ap.add_argument('--self-test');ap.add_argument('--phone-smoke');ap.add_argument('--key-smoke');ap.add_argument('--preview');ap.add_argument('--dialog-preview');ap.add_argument('--interaction-preview');ap.add_argument('--sender-preview');ap.add_argument('--forward-preview');ap.add_argument('--history-preview');ap.add_argument('--transfer-preview');ap.add_argument('--transfer-performance');ap.add_argument('--transfer-performance-mode',choices=('live','stalled'),default='live');ap.add_argument('--smoke',action='store_true');args=ap.parse_args(argv)
     if args.self_test:return self_test(args.self_test)
     if args.key_smoke:
         from .discovery import default_qq_roots,scan_qq_root
@@ -91,6 +91,12 @@ def main(argv=None):
     if args.interaction_preview:
         from .interaction_checks import run
         return run(args.interaction_preview)
+    if getattr(args,'history_preview',None):
+        from .history_checks import run
+        return run(args.history_preview)
+    if args.forward_preview:
+        from .forward_checks import run
+        return run(args.forward_preview)
     if args.sender_preview:
         from .interaction_checks import sender_run
         return sender_run(args.sender_preview)

@@ -5,7 +5,8 @@ from .design import motion_ms
 
 class SmoothScroll(QObject):
     def __init__(self,view):
-        super().__init__(view);self.view=view;view.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        super().__init__(view);self.view=view
+        if isinstance(view,QAbstractItemView):view.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.animation=QPropertyAnimation(view.verticalScrollBar(),b'value',self)
         self.animation.setEasingCurve(QEasingCurve.OutCubic)
         view.viewport().installEventFilter(self);view.verticalScrollBar().sliderPressed.connect(self.animation.stop)

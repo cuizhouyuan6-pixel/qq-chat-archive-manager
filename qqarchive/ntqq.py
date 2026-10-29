@@ -143,6 +143,20 @@ def parse_element(buf: bytes) -> dict:
         txt = _fallback_text(d)
         if txt:
             e["text"] = txt
+    if t in ("card", "forward"):
+        from .forwards import card_descriptor
+        for values in d.values():
+            for value in values:
+                forward = card_descriptor(value)
+                if forward is not None:
+                    e["forward"] = forward
+                    break
+            if "forward" in e:
+                break
+        # Preserve unknown native fields; arbitrary numbers are not sender IDs.
+        if t == "forward" and len(buf) <= 256 * 1024:
+            import base64
+            e["raw_forward_pb"] = base64.b64encode(buf).decode("ascii")
     return e
 
 

@@ -77,6 +77,10 @@ def show_person(reader,message,owner=None):
 
 def message_menu(reader,message,point):
     host=reader.archive_host;menu=QMenu(reader);menu.addAction('复制消息内容',lambda:QApplication.clipboard().setText(message['text']))
+    from .forwards import descriptor
+    if descriptor(message) is not None or message.get('msg_type') in ('card','forward'):
+        from .forward_window import open_forward
+        menu.addAction('查看转发内部记录 / QQ 号',lambda:open_forward(reader,message))
     media=[p for p in reader.arc.media_for_message(message['id']).values() if p.get('kind') in ('image','video','file')]
     for item in media:
         path=item.get('abs_path');exists=bool(path and Path(path).is_file())

@@ -14,7 +14,7 @@ user-profile paths and the private patterns kept only in the untracked
 .local/release.json. Any hit, or a commit e-mail other than GitHub's noreply
 address, stops the run before anything leaves this computer.
 """
-import argparse,json,re,subprocess,sys
+import argparse,hashlib,json,re,subprocess,sys,zipfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -51,6 +51,22 @@ def scan_bytes(data,patterns,label):
     needles=[s.encode(enc) for s in patterns for enc in ('utf-8','utf-16-le')]
     return [f'{label}: private pattern'] if any(n in data for n in needles) else []
 
+
+def scan_source_archive(release,patterns):
+    hits=[]
+    with zipfile.ZipFile(release/'源码快照.zip') as archive:
+        for name in archive.namelist():
+            parts=Path(name).parts
+            if not parts or parts[0] not in ('qqarchive','scripts','tests','installer','docs',
+                    'main.py','requirements.txt','README.md','CHANGELOG.md','.gitignore') or '..' in parts:
+                raise SystemExit('source archive contains a non-public path')
+            if name.endswith('/'):
+                continue
+            data=archive.read(name)
+            try:hits+=scan_text(data.decode('utf-8'),patterns,'source/'+name)
+            except UnicodeDecodeError:hits+=scan_bytes(data,patterns,'source/'+name)
+    return hits
+
 def changelog_with(notes,tag):
     path=ROOT/'CHANGELOG.md';old=path.read_text(encoding='utf-8') if path.exists() else '# 更新记录\n'
     if re.search(rf'^## {re.escape(tag)}(?:[（( ]|$)',old,re.M):return path,old
@@ -62,10 +78,28 @@ def main(argv=None):
     ap=argparse.ArgumentParser();ap.add_argument('--version',required=True);ap.add_argument('--dry-run',action='store_true');a=ap.parse_args(argv)
     tag='v'+a.version.lstrip('v');local=json.loads((ROOT/'.local'/'release.json').read_text(encoding='utf-8'));patterns=local.get('private_patterns',[])
     release=ROOT/'测试版本'/tag;assets=[release/f'QQArchive-{tag}-Setup.exe',release/f'QQArchive-{tag}-portable.zip']
+    bundle=Path(local['artifacts_root'])/f'QQ聊天记录管理器-{tag}-完整资产包.zip' if local.get('artifacts_root') else None
+    if bundle:
+        if not bundle.is_file():raise SystemExit('complete asset bundle is missing')
+        assets.append(bundle)
     if not all(p.is_file() for p in assets):raise SystemExit(f'{tag} is not a published version with installer and portable zip')
     if not git('config','user.email').endswith('@users.noreply.github.com'):raise SystemExit('commit e-mail must be the GitHub noreply address')
     notes_path,notes=notes_for(tag);log_path,log=changelog_with(notes,tag)
     hits=scan_text(notes,patterns,notes_path.name)+scan_text(log,patterns,'CHANGELOG.md')
+    hits+=scan_source_archive(release,patterns)
+    if bundle:
+        with zipfile.ZipFile(bundle) as archive:
+            expected=json.loads(archive.read('SHA256.json'))
+            allowed={f'QQArchive-{tag}-Setup.exe',f'QQArchive-{tag}-portable.zip','源码快照.zip',
+                     'README.md','使用与开发说明.md','更新说明.md'}
+            if set(expected)!=allowed or set(archive.namelist())!=allowed|{'SHA256.json'}:
+                raise SystemExit('complete asset bundle has unexpected files')
+            for name,sha in expected.items():
+                data=archive.read(name)
+                if hashlib.sha256(data).hexdigest()!=sha:raise SystemExit('complete asset checksum mismatch')
+                source=release/name if name.endswith(('.exe','.zip')) else ROOT/(
+                    {'使用与开发说明.md':'docs/开发说明.md','更新说明.md':f'docs/releases/{tag}.md'}.get(name,name))
+                if hashlib.sha256(source.read_bytes()).hexdigest()!=sha:raise SystemExit('complete asset is not the validated release')
     for p in (release/'QQArchive').rglob('*'):
         if p.is_file():hits+=scan_bytes(p.read_bytes(),patterns,f'{tag}/QQArchive/{p.relative_to(release/"QQArchive").as_posix()}')
     if hits:raise SystemExit('privacy gate stopped the release:\n'+'\n'.join(hits[:50]))

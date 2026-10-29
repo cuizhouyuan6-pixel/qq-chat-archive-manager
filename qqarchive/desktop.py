@@ -771,7 +771,14 @@ class MainWindow(Workflows,ChatActions,ChromeWindow):
         self.showNormal();self.raise_();self.activateWindow()
         for w in self.chat_windows.windows:w.show()
     def request_exit(self):
+        if getattr(self,'history_window',None):
+            self.history_window.connect_cancel.set()
+            self.history_window.token.clear();self.history_window.hide()
         self.closing=True
+        forward_windows=list(getattr(self,'forward_windows',{}).values())
+        for dialog in forward_windows:dialog.stop()
+        if any(d.future is not None and not d.future.done() for d in forward_windows):
+            QTimer.singleShot(100,self.request_exit);return
         if hasattr(self,'transfer_monitor') and not self.transfer_monitor.shutdown():
             QTimer.singleShot(100,self.request_exit);return
         self.stop_summary()
@@ -784,6 +791,8 @@ class MainWindow(Workflows,ChatActions,ChromeWindow):
         if key_probe and key_probe.isRunning():key_probe.cancel.set();QTimer.singleShot(100,self.request_exit);return
         self.key_timer.stop();self.phone_timer.stop();self.chat_windows.close_all();self.tray.hide()
         for dialog in list(self.search_windows.values()):dialog.stop();dialog.hide()
+        for dialog in list(getattr(self,'forward_windows',{}).values()):dialog.stop();dialog.hide()
+        if hasattr(self,'forward_windows'):self.forward_windows.clear()
         self.search_windows.clear();self.arc.close();QApplication.quit()
     def closeEvent(self,event):
         if self.closing:

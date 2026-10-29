@@ -67,6 +67,8 @@ class Config:
     phone_include_cache: bool = False
     # Detect QQ's candidate LAN migration connections; prompt before recording.
     transfer_detection: bool = True
+    # Optional loopback HTTP endpoint. Access tokens are never saved here.
+    forward_endpoint: str = 'http://127.0.0.1:3000'
 
     @property
     def data_path(self) -> Path:
